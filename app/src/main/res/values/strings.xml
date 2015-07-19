@@ -1,0 +1,31 @@
+<resources>
+
+    <string name="app_name">Trip Chat</string>
+
+    <!-- Splash screen -->
+    <string name="splash_btn_facebook">Facebook</string>
+    <string name="splash_btn_google">Google</string>
+    <string name="splash_btn_email">Log In with TripChat Account</string>
+
+    <!-- Main screen -->
+    <string name="main_search_hint">Search by station or date</string>
+    <string name="main_action_search">Search</string>
+    <string name="main_action_add">Add Trip</string>
+
+    <!-- Settings screen -->
+    <string name="settings_notification_header">Notifications</string>
+    <string name="settings_trip_reminders_title">Trip Reminders</string>
+    <string name="settings_trip_reminders_desc">Remind 1 hour before trip starts</string>
+    <string name="settings_new_passengers_title">New Passengers</string>
+    <string name="settings_new_passengers_desc">Notify about new user in your bus/train</string>
+    <string name="settings_chat_reminders_title">Chat Reminders</string>
+    <string name="settings_chat_reminders_desc">Show notifications about new messages</string>
+    <string name="settings_vibrate_title">Vibrate</string>
+    <string name="settings_account_header">Your Account</string>
+    <string name="settings_other_header">Other</string>
+    <string name="settings_feedback_title">Leave Feedback</string>
+
+    <!-- Add a Trip screen -->
+    <string name="title_activity_add_trip">Add a Trip</string>
+
+</resources>
