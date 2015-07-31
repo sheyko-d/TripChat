@@ -2,9 +2,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title=""
-        app:showAsAction="never" />
+        android:id="@+id/action_done"
+        android:icon="@drawable/ic_action_done"
+        android:title="@string/main_action_done"
+        app:showAsAction="ifRoom" />
 
 </menu>

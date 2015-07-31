@@ -13,8 +13,8 @@ import uk.co.jmrtra.tripchat.adapter.ThreadsAdapter;
 
 public class ThreadsFragment extends Fragment {
     private ThreadsAdapter mAdapter;
-    private SortedList mThreads = new SortedList<>(ThreadsAdapter.Thread.class,
-            new SortedList.Callback<ThreadsAdapter.Thread>() {
+    private SortedList<ThreadsAdapter.Thread> mThreads = new SortedList<>(ThreadsAdapter.Thread
+            .class, new SortedList.Callback<ThreadsAdapter.Thread>() {
                 @Override
                 public int compare(ThreadsAdapter.Thread o1, ThreadsAdapter.Thread o2) {
                     return o1.getLastTimestamp().compareTo(o2.getLastTimestamp());
@@ -55,8 +55,7 @@ public class ThreadsFragment extends Fragment {
             });
 
     public static ThreadsFragment newInstance() {
-        ThreadsFragment fragment = new ThreadsFragment();
-        return fragment;
+        return new ThreadsFragment();
     }
 
     public ThreadsFragment() {
@@ -78,13 +77,13 @@ public class ThreadsFragment extends Fragment {
 
         mThreads.clear();
         mThreads.add(new ThreadsAdapter.Thread("0", "Barack Obama", "Hello there Barack",
-                System.currentTimeMillis() + "",
+                "1438183791000",
                 "https://pbs.twimg.com/profile_images/451007105391022080/iu1f7brY_400x400.png"));
         mThreads.add(new ThreadsAdapter.Thread("1", "Taylor Swift", "Blah blah blah",
-                System.currentTimeMillis() + "",
+                "1438183791000",
                 "http://a.abcnews.com/images/Entertainment/gty_taylor_swift_jc_150127_16x9_992.jpg"));
         mThreads.add(new ThreadsAdapter.Thread("2", "Angelina Jolie", "Test message, hey",
-                System.currentTimeMillis() + "",
+                "1438183791000",
                 "http://tvbythenumbers.zap2it.com/wp-content/uploads/2014/12/Angelina-Jolie-arrives-on-the-red-carpet-for-the-86th-Academy-Awards.jpg"));
 
         return threadsRecycler;

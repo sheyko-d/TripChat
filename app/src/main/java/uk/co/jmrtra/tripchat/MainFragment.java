@@ -8,20 +8,28 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import uk.co.jmrtra.tripchat.adapter.TripsAdapter;
 
 public class MainFragment extends Fragment {
     private TripsAdapter mAdapter;
-    private SortedList mTrips = new SortedList<>(TripsAdapter.Trip.class,
+    private SortedList<TripsAdapter.Trip> mTrips = new SortedList<>(TripsAdapter.Trip.class,
             new SortedList.Callback<TripsAdapter.Trip>() {
                 @Override
                 public int compare(TripsAdapter.Trip o1, TripsAdapter.Trip o2) {
                     // Sort items, new ones first
-                    int i = o1.getType().compareTo(o2.getType());
-                    if (i != 0) return i;
-
-                    return o1.getArrivalName().compareTo(o2.getArrivalName());
+                    return o2.getDepartureTime().compareTo(o1.getDepartureTime());
                 }
 
                 @Override
@@ -45,11 +53,11 @@ public class MainFragment extends Fragment {
                 }
 
                 @Override
-                public boolean areContentsTheSame(TripsAdapter.Trip oldItem, TripsAdapter.Trip newItem) {
+                public boolean areContentsTheSame(TripsAdapter.Trip oldItem,
+                                                  TripsAdapter.Trip newItem) {
                     // return whether the items' visual representations are the same or not.
-                    return oldItem.getType().equals(newItem.getType()) && oldItem.getDepartureName()
-                            .equalsIgnoreCase(oldItem.getDepartureName()) && oldItem
-                            .getArrivalName().equalsIgnoreCase(oldItem.getArrivalName());
+                    return oldItem.getDepartureName().equalsIgnoreCase(oldItem.getDepartureName())
+                            && oldItem.getArrivalName().equalsIgnoreCase(oldItem.getArrivalName());
                 }
 
                 @Override
@@ -82,15 +90,77 @@ public class MainFragment extends Fragment {
         mAdapter = new TripsAdapter(getActivity(), mTrips);
         mainRecycler.setAdapter(mAdapter);
 
-        mTrips.clear();
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "ABW", "Abbey Wood", "WNY", "White Notley", "http://www.essexwalks.com/photos/ew_coggeshall/13_0056.jpg", TripsAdapter.TRIP_TYPE_BUS));
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "EBT", "Edenbridge Town", "WNE", "Wilnecote", "https://upload.wikimedia.org/wikipedia/commons/a/a2/Edenbridge_1.JPG", TripsAdapter.TRIP_TYPE_BUS));
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "NTC"   , "Newton St Cyres", "DRN", "Duirinish", "https://upload.wikimedia.org/wikipedia/commons/e/ee/Duirinish_station_geograph-3866550-by-Ben-Brooksbank.jpg", TripsAdapter.TRIP_TYPE_TRAIN));
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "THT", "Thorntonhall", "DNS", "Dinas Powys", "http://4.bp.blogspot.com/_anDpzjfvZpw/TO5s47hORkI/AAAAAAAAC6Q/8lVISlsNFyk/s1600/Threehorseshoesdinas.jpg", TripsAdapter.TRIP_TYPE_BUS));
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "DKT", "Dorking West", "ORE", "Ore", "http://www.orestationlodge.com/wp-content/themes/orestationlodge/UserStorage/0001779/Units/00002067/large/xtelluride%20vacation%20rental.jpg", TripsAdapter.TRIP_TYPE_BUS));
-        mTrips.add(new TripsAdapter.Trip(TripsAdapter.ITEM_TYPE_ITEM, "WCP", "Worcester Park", "AVY", "Aberdovey", "http://www.picpicx.com/wp-content/uploads/2014/10/df00ae0ddf50acb564bca86710b1922b.jpg", TripsAdapter.TRIP_TYPE_TRAIN));
+        getTrips();
 
         return mainRecycler;
+    }
+
+    public void getTrips() {
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, Util.URL_GET_TRIPS,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject responseJSON = new JSONObject(response);
+                            if (responseJSON.getString("result").equals("success")) {
+                                JSONArray tripsJSON = responseJSON.getJSONArray("trips");
+                                int tripsCount = tripsJSON.length();
+                                mTrips.clear();
+                                mTrips.beginBatchedUpdates();
+                                for (int i = 0; i < tripsCount; i++) {
+                                    String id = tripsJSON.getJSONObject(i).getString("id");
+                                    int type = tripsJSON.getJSONObject(i).getInt("type");
+                                    String departureName = tripsJSON.getJSONObject(i)
+                                            .getString("departure_name");
+                                    String departureCode = tripsJSON.getJSONObject(i)
+                                            .getString("departure_code");
+                                    String departureTimestamp = tripsJSON.getJSONObject(i)
+                                            .getString("departure_timestamp");
+                                    String arrivalName = tripsJSON.getJSONObject(i)
+                                            .getString("arrival_name");
+                                    String arrivalCode = tripsJSON.getJSONObject(i)
+                                            .getString("arrival_code");
+                                    String arrivalTimestamp = tripsJSON.getJSONObject(i)
+                                            .getString("arrival_timestamp");
+                                    String image = tripsJSON.getJSONObject(i).getString("image");
+                                    mTrips.add(new TripsAdapter.Trip(departureCode, departureName,
+                                            departureTimestamp, arrivalCode, arrivalName,
+                                            arrivalTimestamp, image, type));
+                                }
+                                mTrips.endBatchedUpdates();
+                            } else {
+                                Util.Log("Unknown server error");
+                                Toast.makeText(getActivity(), "Unknown server error",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            Util.Log("JSON error: " + e);
+                            Toast.makeText(getActivity(), "JSON error: " + e,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        Util.Log(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Util.Log("Server error: " + error);
+                Toast.makeText(getActivity(), "Server error: " + error, Toast.LENGTH_LONG)
+                        .show();
+            }
+        }) {
+            @Override
+            protected VolleyError parseNetworkError(VolleyError volleyError) {
+                if (volleyError.networkResponse != null
+                        && volleyError.networkResponse.data != null) {
+                    volleyError = new VolleyError(new String(volleyError.networkResponse.data));
+                }
+
+                return volleyError;
+            }
+        };
+        // Add the request to the RequestQueue.
+        Volley.newRequestQueue(getActivity()).add(stringRequest);
     }
 
 }

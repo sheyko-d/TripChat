@@ -12,10 +12,7 @@
         android:background="@drawable/message_in_bg"
         android:fontFamily="sans-serif"
         android:gravity="center_vertical"
-        android:includeFontPadding="false"
-        android:paddingLeft="28dp"
-        android:paddingRight="12dp"
-        android:textColor="@color/secondary_text"
+        android:textColor="@color/primary_text"
         android:textSize="14sp" />
 
     <TextView
@@ -24,10 +21,11 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_toRightOf="@+id/messages_text_txt"
+        android:layout_toEndOf="@+id/messages_text_txt"
         android:fontFamily="sans-serif"
-        android:includeFontPadding="false"
         android:textColor="@color/secondary_text"
         android:textSize="12sp" />
 </RelativeLayout>

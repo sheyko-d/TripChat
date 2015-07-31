@@ -23,6 +23,7 @@
                     android:id="@+id/trips_img"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/trip_img_height"
+                    android:contentDescription="@null"
                     android:scaleType="centerCrop" />
 
                 <LinearLayout
@@ -36,26 +37,32 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
                         <TextView
                             android:id="@+id/trips_departure_code_txt"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:ellipsize="end"
                             android:fontFamily="sans-serif"
                             android:gravity="center"
                             android:includeFontPadding="false"
+                            android:singleLine="true"
                             android:textColor="@android:color/white"
-                            android:textSize="36sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/trips_departure_name_txt"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
                             android:fontFamily="sans-serif"
                             android:gravity="center"
                             android:includeFontPadding="false"
+                            android:maxLines="3"
                             android:textColor="@android:color/white"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -65,34 +72,39 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_type_bus" />
+                        android:contentDescription="@null" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
                         <TextView
                             android:id="@+id/trips_arrival_code_txt"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:ellipsize="end"
                             android:fontFamily="sans-serif"
                             android:gravity="center"
                             android:includeFontPadding="false"
+                            android:singleLine="true"
                             android:textColor="@android:color/white"
-                            android:textSize="36sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/trips_arrival_name_txt"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
                             android:fontFamily="sans-serif"
                             android:gravity="center"
                             android:includeFontPadding="false"
+                            android:maxLines="3"
                             android:textColor="@android:color/white"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -117,35 +129,38 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-light"
                         android:gravity="center"
-                        android:text="Departure"
+                        android:text="@string/main_trips_departure_title"
                         android:textAllCaps="true"
                         android:textColor="@color/secondary_text"
                         android:textSize="10sp" />
 
                     <TextView
+                        android:id="@+id/trips_departure_time_txt"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="12:30"
                         android:textColor="@color/primary_text"
                         android:textSize="22sp" />
 
                     <TextView
+                        android:id="@+id/trips_departure_date_txt"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="sans-serif"
                         android:gravity="center"
-                        android:layout_marginTop="2dp"
-                        android:text="Wed 7 Apr"
                         android:textAllCaps="true"
                         android:textColor="@color/primary_text"
                         android:textSize="10sp" />
 
                 </LinearLayout>
 
-                <android.support.design.widget.FloatingActionButton
+                <ImageButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/fab_trips_bg"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_fab" />
 
                 <LinearLayout
@@ -159,26 +174,26 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-light"
                         android:gravity="center"
-                        android:text="Arrival"
+                        android:text="@string/main_trips_arrival_title"
                         android:textAllCaps="true"
                         android:textColor="@color/secondary_text"
                         android:textSize="10sp" />
 
                     <TextView
+                        android:id="@+id/trips_arrival_time_txt"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="21:45"
                         android:textColor="@color/primary_text"
                         android:textSize="22sp" />
 
                     <TextView
+                        android:id="@+id/trips_arrival_date_txt"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="sans-serif"
                         android:gravity="center"
-                        android:text="Wed 8 Apr"
                         android:textAllCaps="true"
                         android:textColor="@color/primary_text"
                         android:textSize="10sp" />

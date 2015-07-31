@@ -22,9 +22,6 @@ public class SplashActivity extends AppCompatActivity {
 
         mFacebookBtn.setOnClickListener(mLoginClickListener);
         mGoogleBtn.setOnClickListener(mLoginClickListener);
-
-        //TODO: Remove
-        startActivity(new Intent(this, MainActivity.class));
     }
 
     View.OnClickListener mLoginClickListener = new View.OnClickListener() {

@@ -17,6 +17,7 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
 import uk.co.jmrtra.tripchat.MessagesActivity;
 import uk.co.jmrtra.tripchat.R;
+import uk.co.jmrtra.tripchat.Util;
 
 public class ThreadsAdapter extends
         RecyclerView.Adapter<ThreadsAdapter.ThreadHolder> {
@@ -72,6 +73,10 @@ public class ThreadsAdapter extends
             return lastTimestamp;
         }
 
+        public String getLastTime() {
+            return Util.formatTime(lastTimestamp);
+        }
+
         public String getAvatar() {
             return avatar;
         }
@@ -120,7 +125,7 @@ public class ThreadsAdapter extends
 
         holder.nameTxt.setText(thread.getName());
         holder.snippetTxt.setText(thread.getSnippet());
-        holder.timeTxt.setText(thread.getLastTimestamp());
+        holder.timeTxt.setText(thread.getLastTime());
         mImageLoader.displayImage(thread.getAvatar(), holder.avatarImg);
     }
 

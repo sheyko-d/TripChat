@@ -1,5 +1,6 @@
 package uk.co.jmrtra.tripchat.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
@@ -14,13 +15,13 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import java.text.SimpleDateFormat;
+
 import uk.co.jmrtra.tripchat.R;
 
 public class TripsAdapter extends
         RecyclerView.Adapter<TripsAdapter.TripHolder> {
 
-    public static final int ITEM_TYPE_HEADER = 0;
-    public static final int ITEM_TYPE_ITEM = 1;
     public static final int TRIP_TYPE_BUS = 0;
     public static final int TRIP_TYPE_TRAIN = 1;
     private ImageLoader mImageLoader;
@@ -41,28 +42,26 @@ public class TripsAdapter extends
 
     public static class Trip {
 
-        public Integer type;
         public String departureCode;
         public String departureName;
+        public String departureTimestamp;
         public String arrivalCode;
         public String arrivalName;
+        public String arrivalTimestamp;
         public String image;
         public Integer tripType;
 
-        public Trip(Integer type, String departureCode, String departureName,
-                    String arrivalCode, String arrivalName, String image,
+        public Trip(String departureCode, String departureName, String departureTimestamp,
+                    String arrivalCode, String arrivalName, String arrivalTimestamp, String image,
                     Integer tripType) {
-            this.type = type;
             this.departureCode = departureCode;
             this.departureName = departureName;
+            this.departureTimestamp = departureTimestamp;
             this.arrivalCode = arrivalCode;
             this.arrivalName = arrivalName;
+            this.arrivalTimestamp = arrivalTimestamp;
             this.image = image;
             this.tripType = tripType;
-        }
-
-        public Integer getType() {
-            return type;
         }
 
         public String getDepartureCode() {
@@ -89,19 +88,38 @@ public class TripsAdapter extends
             return tripType;
         }
 
-    }
+        @SuppressLint("SimpleDateFormat")
+        public String getDepartureTime() {
+            return new SimpleDateFormat("HH:mm").format(Long.parseLong(departureTimestamp));
+        }
 
-    @Override
-    public int getItemViewType(int position) {
-        return trips.get(position).getType();
+        @SuppressLint("SimpleDateFormat")
+        public String getDepartureDate() {
+            return new SimpleDateFormat("EE dd MMM").format(Long.parseLong(departureTimestamp));
+        }
+
+        @SuppressLint("SimpleDateFormat")
+        public String getArrivalTime() {
+            return new SimpleDateFormat("HH:mm").format(Long.parseLong(arrivalTimestamp));
+        }
+
+        @SuppressLint("SimpleDateFormat")
+        public String getArrivalDate() {
+            return new SimpleDateFormat("EE dd MMM").format(Long.parseLong(arrivalTimestamp));
+        }
+
     }
 
     public class TripHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public TextView departureCodeTxt;
         public TextView departureNameTxt;
+        public TextView departureTimeTxt;
+        public TextView departureDateTxt;
         public TextView arrivalCodeTxt;
         public TextView arrivalNameTxt;
+        public TextView arrivalTimeTxt;
+        public TextView arrivalDateTxt;
         public ImageView img;
         public ImageView typeImg;
 
@@ -112,8 +130,12 @@ public class TripsAdapter extends
             departureCodeTxt = (TextView) v
                     .findViewById(R.id.trips_departure_code_txt);
             departureNameTxt = (TextView) v.findViewById(R.id.trips_departure_name_txt);
+            departureTimeTxt = (TextView) v.findViewById(R.id.trips_departure_time_txt);
+            departureDateTxt = (TextView) v.findViewById(R.id.trips_departure_date_txt);
             arrivalCodeTxt = (TextView) v.findViewById(R.id.trips_arrival_code_txt);
             arrivalNameTxt = (TextView) v.findViewById(R.id.trips_arrival_name_txt);
+            arrivalTimeTxt = (TextView) v.findViewById(R.id.trips_arrival_time_txt);
+            arrivalDateTxt = (TextView) v.findViewById(R.id.trips_arrival_date_txt);
 
             v.setOnClickListener(this);
         }
@@ -132,13 +154,8 @@ public class TripsAdapter extends
     @Override
     public TripHolder onCreateViewHolder(ViewGroup parent,
                                          int viewType) {
-        if (viewType == ITEM_TYPE_ITEM) {
-            return new TripHolder(LayoutInflater.from(parent.getContext()).inflate(
-                    R.layout.item_trips, parent, false));
-        } else {
-            return new TripHolder(LayoutInflater.from(parent.getContext()).inflate(
-                    R.layout.item_trips_header, parent, false));
-        }
+        return new TripHolder(LayoutInflater.from(parent.getContext()).inflate(
+                R.layout.item_trips, parent, false));
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -146,18 +163,19 @@ public class TripsAdapter extends
     public void onBindViewHolder(TripHolder holder, int position) {
         Trip trip = trips.get(position);
 
-        if (getItemViewType(position) == ITEM_TYPE_ITEM) {
-            holder.departureNameTxt.setText(trip.getDepartureName());
-            holder.departureCodeTxt.setText(trip.getDepartureCode());
-            holder.arrivalNameTxt.setText(trip.getArrivalName());
-            holder.arrivalCodeTxt.setText(trip.getArrivalCode());
-            mImageLoader.displayImage(trip.getImage(), holder.img);
-            if (trip.getTripType() == TRIP_TYPE_BUS) {
-                holder.typeImg.setImageResource(R.drawable.ic_type_bus);
-            } else {
-                holder.typeImg.setImageResource(R.drawable.ic_type_train);
-            }
+        holder.departureNameTxt.setText(trip.getDepartureName());
+        holder.departureCodeTxt.setText(trip.getDepartureCode());
+        holder.departureTimeTxt.setText(trip.getDepartureTime());
+        holder.departureDateTxt.setText(trip.getDepartureDate());
+        holder.arrivalNameTxt.setText(trip.getArrivalName());
+        holder.arrivalCodeTxt.setText(trip.getArrivalCode());
+        holder.arrivalTimeTxt.setText(trip.getArrivalTime());
+        holder.arrivalDateTxt.setText(trip.getArrivalDate());
+        mImageLoader.displayImage(trip.getImage(), holder.img);
+        if (trip.getTripType() == TRIP_TYPE_BUS) {
+            holder.typeImg.setImageResource(R.drawable.ic_type_bus);
         } else {
+            holder.typeImg.setImageResource(R.drawable.ic_type_train);
         }
     }
 

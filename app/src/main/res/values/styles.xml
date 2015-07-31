@@ -8,7 +8,11 @@
         <item name="android:windowBackground">@color/bg</item>
     </style>
 
-    <style name="AppTheme.Transluent" parent="AppTheme"/>
+    <style name="EditText.White" parent="Widget.AppCompat.EditText">
+        <item name="colorControlNormal">@color/highlight</item>
+    </style>
+
+    <style name="AppTheme.Transluent" parent="AppTheme" />
 
     <style name="AppTheme.Splash" parent="AppTheme">
         <item name="android:windowBackground">@color/primary</item>
@@ -28,6 +32,10 @@
 
     <style name="ButtonFacebook" parent="Button.Base">
         <item name="colorButtonNormal">@color/btn_facebook</item>
+    </style>
+
+    <style name="MaterialDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/accent</item>
     </style>
 
 </resources>

@@ -22,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
     private TabLayout mTabLayout;
+    private static final int ADD_TRIP_REQUEST = 0;
+    private MainFragment mMainFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             if (position == 0) {
-                return MainFragment.newInstance();
+                mMainFragment = MainFragment.newInstance();
+                return mMainFragment;
             } else if (position == 1) {
                 return ThreadsFragment.newInstance();
             } else {
@@ -116,8 +119,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add) {
-            startActivity(new Intent(this, AddTripActivity.class));
+            startActivityForResult(new Intent(this, AddTripActivity.class), ADD_TRIP_REQUEST);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == ADD_TRIP_REQUEST && resultCode == RESULT_OK) {
+            mMainFragment.getTrips();
+        }
     }
 }

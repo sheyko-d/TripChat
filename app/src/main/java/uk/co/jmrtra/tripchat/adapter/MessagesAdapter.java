@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import uk.co.jmrtra.tripchat.R;
+import uk.co.jmrtra.tripchat.Util;
 
 public class MessagesAdapter extends
         RecyclerView.Adapter<MessagesAdapter.MessageHolder> {
@@ -50,6 +51,10 @@ public class MessagesAdapter extends
 
         public String getTimestamp() {
             return timestamp;
+        }
+
+        public String getTime() {
+            return Util.formatTime(timestamp);
         }
 
         public Integer getType() {
@@ -105,7 +110,7 @@ public class MessagesAdapter extends
         Message message = messages.get(position);
 
         holder.textTxt.setText(message.getText());
-        holder.timeTxt.setText(message.getTimestamp());
+        holder.timeTxt.setText(message.getTime());
     }
 
     @Override
