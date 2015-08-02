@@ -5,11 +5,18 @@ import android.util.Log;
 
 public class Util {
 
-    private static final String LOG_TAG = "BlankDebug";
+    private static final String LOG_TAG = "TripDebug";
+    public static final String URL_LOG_IN = "http://jmrtra.co.uk/tripchat/log_in.php";
+    public static final String URL_SIGN_IN = "http://jmrtra.co.uk/tripchat/sign_in.php";
+    public static final String URL_SIGN_IN_SOCIAL
+            = "http://jmrtra.co.uk/tripchat/sign_in_social.php";
     public static final String URL_GET_SUGGESTIONS
             = "http://jmrtra.co.uk/tripchat/get_suggestions.php";
     public static final String URL_ADD_TRIP = "http://jmrtra.co.uk/tripchat/add_trip.php";
     public static final String URL_GET_TRIPS = "http://jmrtra.co.uk/tripchat/get_trips.php";
+    public static final String URL_GET_THREADS = "http://jmrtra.co.uk/tripchat/get_threads.php";
+    public static final String URL_GET_MESSAGES = "http://jmrtra.co.uk/tripchat/get_messages.php";
+    public static final String URL_SEND_MESSAGE = "http://jmrtra.co.uk/tripchat/send_message.php";
 
     // Methods
     public static void Log(Object text) {
@@ -72,13 +79,13 @@ public class Util {
         } else if (differenceMin < 60) {
             return differenceMin + " min ago";
         } else if (differenceMin < 60 * 24) {
-            return differenceMin / 60 + " hours ago";
+            return differenceMin / 60 + " hour(s) ago";
         } else if (differenceMin < 60 * 24 * 30) {
-            return differenceMin / 60 / 24 + " days ago";
+            return differenceMin / 60 / 24 + " day(s) ago";
         } else if (differenceMin < 60 * 60 * 30 * 12) {
-            return differenceMin / 60 / 24 * 30 + " months ago";
+            return differenceMin / 60 / 24 * 30 + " month(s) ago";
         } else {
-            return differenceMin / 60 / 24 / 30 / 12 + " years ago";
+            return differenceMin / 60 / 24 / 30 / 12 + " year(s) ago";
         }
     }
 }

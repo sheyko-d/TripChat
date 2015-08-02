@@ -156,10 +156,11 @@
                 </LinearLayout>
 
                 <ImageButton
+                    android:id="@+id/trips_chat_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:background="@drawable/fab_trips_bg"
+                    android:background="@drawable/fab_trips_bg_selector"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_fab" />
 

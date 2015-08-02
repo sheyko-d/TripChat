@@ -1,58 +1,79 @@
 package uk.co.jmrtra.tripchat;
 
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import uk.co.jmrtra.tripchat.adapter.ThreadsAdapter;
 
 public class ThreadsFragment extends Fragment {
-    private ThreadsAdapter mAdapter;
     private SortedList<ThreadsAdapter.Thread> mThreads = new SortedList<>(ThreadsAdapter.Thread
             .class, new SortedList.Callback<ThreadsAdapter.Thread>() {
-                @Override
-                public int compare(ThreadsAdapter.Thread o1, ThreadsAdapter.Thread o2) {
-                    return o1.getLastTimestamp().compareTo(o2.getLastTimestamp());
-                }
+        @Override
+        public int compare(ThreadsAdapter.Thread o1, ThreadsAdapter.Thread o2) {
+            return o1.getLastTimestamp().compareTo(o2.getLastTimestamp());
+        }
 
-                @Override
-                public void onInserted(int position, int count) {
-                    mAdapter.notifyItemRangeInserted(position, count);
-                }
+        @Override
+        public void onInserted(int position, int count) {
+            mAdapter.notifyItemRangeInserted(position, count);
+        }
 
-                @Override
-                public void onRemoved(int position, int count) {
-                    mAdapter.notifyItemRangeRemoved(position, count);
-                }
+        @Override
+        public void onRemoved(int position, int count) {
+            mAdapter.notifyItemRangeRemoved(position, count);
+        }
 
-                @Override
-                public void onMoved(int fromPosition, int toPosition) {
-                    mAdapter.notifyItemMoved(fromPosition, toPosition);
-                }
+        @Override
+        public void onMoved(int fromPosition, int toPosition) {
+            mAdapter.notifyItemMoved(fromPosition, toPosition);
+        }
 
-                @Override
-                public void onChanged(int position, int count) {
-                    mAdapter.notifyItemRangeChanged(position, count);
-                }
+        @Override
+        public void onChanged(int position, int count) {
+            mAdapter.notifyItemRangeChanged(position, count);
+        }
 
-                @Override
-                public boolean areContentsTheSame(ThreadsAdapter.Thread oldItem, ThreadsAdapter.Thread newItem) {
-                    // return whether the items' visual representations are the same or not.
-                    return oldItem.getName().equals(newItem.getName()) && oldItem.getSnippet()
-                            .equals(newItem.getSnippet()) && oldItem.getLastTimestamp()
-                            .equals(newItem.getLastTimestamp());
-                }
+        @Override
+        public boolean areContentsTheSame(ThreadsAdapter.Thread oldItem, ThreadsAdapter.Thread newItem) {
+            // return whether the items' visual representations are the same or not.
+            return oldItem.getName().equals(newItem.getName()) && oldItem.getSnippet()
+                    .equals(newItem.getSnippet()) && oldItem.getLastTimestamp()
+                    .equals(newItem.getLastTimestamp());
+        }
 
-                @Override
-                public boolean areItemsTheSame(ThreadsAdapter.Thread item1, ThreadsAdapter.Thread item2) {
-                    return item1.getThreadId().equals(item2.getThreadId());
-                }
-            });
+        @Override
+        public boolean areItemsTheSame(ThreadsAdapter.Thread item1, ThreadsAdapter.Thread item2) {
+            return item1.getThreadId().equals(item2.getThreadId());
+        }
+    });
+    private ThreadsAdapter mAdapter;
+    private View mProgressBar;
+    private SwipeRefreshLayout mRefreshLayout;
+    private boolean mForceUpdate;
+    private RecyclerView mThreadsRecycler;
+    private int mScrollOffset = 0;
 
     public static ThreadsFragment newInstance() {
         return new ThreadsFragment();
@@ -64,29 +85,144 @@ public class ThreadsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        RecyclerView threadsRecycler = (RecyclerView) inflater.inflate(R.layout.fragment_messages,
-                container, false);
+        View rootView = inflater.inflate(R.layout.fragment_threads, container, false);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        threadsRecycler.setLayoutManager(layoutManager);
+        mThreadsRecycler = (RecyclerView) rootView.findViewById(R.id
+                .threads_recycler_view);
+        mProgressBar = rootView.findViewById(R.id.threads_progress_bar);
+        mRefreshLayout = (SwipeRefreshLayout) getActivity()
+                .findViewById(R.id.threads_refresh_layout);
 
-        threadsRecycler.setHasFixedSize(true);
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mForceUpdate = true;
+                getThreads();
+            }
+        });
 
-        mAdapter = new ThreadsAdapter(getActivity(), mThreads);
-        threadsRecycler.setAdapter(mAdapter);
+        initRecycler();
 
         mThreads.clear();
-        mThreads.add(new ThreadsAdapter.Thread("0", "Barack Obama", "Hello there Barack",
-                "1438183791000",
-                "https://pbs.twimg.com/profile_images/451007105391022080/iu1f7brY_400x400.png"));
-        mThreads.add(new ThreadsAdapter.Thread("1", "Taylor Swift", "Blah blah blah",
-                "1438183791000",
-                "http://a.abcnews.com/images/Entertainment/gty_taylor_swift_jc_150127_16x9_992.jpg"));
-        mThreads.add(new ThreadsAdapter.Thread("2", "Angelina Jolie", "Test message, hey",
-                "1438183791000",
-                "http://tvbythenumbers.zap2it.com/wp-content/uploads/2014/12/Angelina-Jolie-arrives-on-the-red-carpet-for-the-86th-Academy-Awards.jpg"));
 
-        return threadsRecycler;
+        mForceUpdate = false;
+        getThreads();
+
+        return rootView;
+    }
+
+    @Override
+    public void setMenuVisibility(final boolean visible) {
+        super.setMenuVisibility(visible);
+        if (visible) {
+            updateRefreshLayout();
+        }
+    }
+
+    private void initRecycler() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        mThreadsRecycler.setLayoutManager(layoutManager);
+
+        mThreadsRecycler.setHasFixedSize(true);
+
+        mAdapter = new ThreadsAdapter(getActivity(), mThreads);
+        mThreadsRecycler.setAdapter(mAdapter);
+
+        mThreadsRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                mScrollOffset += dy;
+                updateRefreshLayout();
+
+            }
+        });
+    }
+
+    private void updateRefreshLayout() {
+        Boolean enabled = mScrollOffset <= 0;
+        if (mRefreshLayout != null && mRefreshLayout.isEnabled() != enabled) {
+            mRefreshLayout.setEnabled(enabled);
+        }
+    }
+
+    public void getThreads() {
+        final String id = PreferenceManager.getDefaultSharedPreferences(getActivity())
+                .getString("id", "");
+
+        if (!mForceUpdate) {
+            mProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, Util.URL_GET_THREADS,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject responseJSON = new JSONObject(response);
+                            if (responseJSON.getString("result").equals("success")) {
+                                JSONArray threadsJSON = responseJSON.getJSONArray("threads");
+
+                                int threadsCount = threadsJSON.length();
+                                mThreads.beginBatchedUpdates();
+                                mThreads.clear();
+                                for (int i = 0; i < threadsCount; i++) {
+                                    String id = threadsJSON.getJSONObject(i).getString("id");
+                                    String avatar = threadsJSON.getJSONObject(i)
+                                            .getString("avatar");
+                                    String name = threadsJSON.getJSONObject(i)
+                                            .getString("name");
+                                    String text = threadsJSON.getJSONObject(i)
+                                            .getString("text");
+                                    String timestamp = threadsJSON.getJSONObject(i)
+                                            .getString("timestamp");
+                                    mThreads.add(new ThreadsAdapter.Thread(id, name, text,
+                                            timestamp, avatar));
+                                }
+
+                                mThreads.endBatchedUpdates();
+                            } else {
+                                Util.Log("Unknown server error");
+                                Toast.makeText(getActivity(), "Unknown server error",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            Util.Log("JSON error: " + e);
+                            Toast.makeText(getActivity(), "JSON error: " + e,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        Util.Log(response);
+                        mProgressBar.setVisibility(View.GONE);
+                        mRefreshLayout.setRefreshing(false);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Util.Log("Server error: " + error);
+                Toast.makeText(getActivity(), "Server error: " + error, Toast.LENGTH_LONG).show();
+                mProgressBar.setVisibility(View.GONE);
+                mRefreshLayout.setRefreshing(false);
+            }
+        }) {
+            @Override
+            protected VolleyError parseNetworkError(VolleyError volleyError) {
+                if (volleyError.networkResponse != null
+                        && volleyError.networkResponse.data != null) {
+                    volleyError = new VolleyError(new String(volleyError.networkResponse.data));
+                }
+
+                return volleyError;
+            }
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("user_id", id);
+                return params;
+            }
+        };
+        // Add the request to the RequestQueue.
+        Volley.newRequestQueue(getActivity()).add(stringRequest);
     }
 
 }

@@ -1,8 +1,8 @@
 package uk.co.jmrtra.tripchat.adapter;
 
-import android.content.Context;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,12 +15,9 @@ public class MessagesAdapter extends
         RecyclerView.Adapter<MessagesAdapter.MessageHolder> {
 
     public static final int ITEM_TYPE_MESSAGE_IN = 0;
-    public static final int ITEM_TYPE_MESSAGE_OUT = 1;
-    private Context mContext;
     private SortedList<Message> messages;
 
-    public MessagesAdapter(Context context, SortedList<Message> messages) {
-        mContext = context;
+    public MessagesAdapter(SortedList<Message> messages) {
         this.messages = messages;
 
     }
@@ -68,7 +65,7 @@ public class MessagesAdapter extends
         return messages.get(position).getType();
     }
 
-    public class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class MessageHolder extends RecyclerView.ViewHolder {
 
         public TextView textTxt;
         public TextView timeTxt;
@@ -77,18 +74,7 @@ public class MessagesAdapter extends
             super(v);
             textTxt = (TextView) v.findViewById(R.id.messages_text_txt);
             timeTxt = (TextView) v.findViewById(R.id.messages_time_txt);
-
-            v.setOnClickListener(this);
         }
-
-        @Override
-        public void onClick(View v) {
-            messageClickListener.onItemClick(v, getAdapterPosition());
-        }
-    }
-
-    public interface OnItemClickListener {
-        void onItemClick(View view, int position);
     }
 
     // Create new views (invoked by the layout manager)
@@ -109,7 +95,7 @@ public class MessagesAdapter extends
     public void onBindViewHolder(MessageHolder holder, int position) {
         Message message = messages.get(position);
 
-        holder.textTxt.setText(message.getText());
+        holder.textTxt.setText(Html.fromHtml(message.getText()));
         holder.timeTxt.setText(message.getTime());
     }
 
@@ -117,13 +103,4 @@ public class MessagesAdapter extends
     public int getItemCount() {
         return messages.size();
     }
-
-    OnItemClickListener messageClickListener = new OnItemClickListener() {
-
-        @Override
-        public void onItemClick(View v, int position) {
-            // TODO: Do we need click listener for messages in chat?
-        }
-
-    };
 }

@@ -2,9 +2,11 @@ package uk.co.jmrtra.tripchat;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,10 +22,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import uk.co.jmrtra.tripchat.adapter.TripsAdapter;
+import uk.co.jmrtra.tripchat.view.EmptyRecyclerView;
 
 public class MainFragment extends Fragment {
-    private TripsAdapter mAdapter;
     private SortedList<TripsAdapter.Trip> mTrips = new SortedList<>(TripsAdapter.Trip.class,
             new SortedList.Callback<TripsAdapter.Trip>() {
                 @Override
@@ -67,10 +72,13 @@ public class MainFragment extends Fragment {
                             && item1.getDepartureName().equals(item2.getDepartureName());
                 }
             });
+    private TripsAdapter mAdapter;
+    private EmptyRecyclerView mMainRecycler;
+    private SwipeRefreshLayout mRefreshLayout;
+    private int mScrollOffset = 0;
 
     public static MainFragment newInstance() {
-        MainFragment fragment = new MainFragment();
-        return fragment;
+        return new MainFragment();
     }
 
     public MainFragment() {
@@ -79,23 +87,53 @@ public class MainFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        RecyclerView mainRecycler = (RecyclerView) inflater.inflate(R.layout.fragment_main,
+        View rootView = inflater.inflate(R.layout.fragment_main,
                 container, false);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        mainRecycler.setLayoutManager(layoutManager);
+        mMainRecycler = (EmptyRecyclerView) rootView.findViewById(R.id.main_recycler_view);
+        mMainRecycler.setEmptyView(rootView.findViewById(R.id.main_placeholder_layout));
+        mRefreshLayout = (SwipeRefreshLayout) getActivity()
+                .findViewById(R.id.threads_refresh_layout);
 
-        mainRecycler.setHasFixedSize(true);
+        initRecycler();
+        getTrips(null);
 
-        mAdapter = new TripsAdapter(getActivity(), mTrips);
-        mainRecycler.setAdapter(mAdapter);
-
-        getTrips();
-
-        return mainRecycler;
+        return rootView;
     }
 
-    public void getTrips() {
+    private void initRecycler() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        mMainRecycler.setLayoutManager(layoutManager);
+        mMainRecycler.setHasFixedSize(true);
+
+        mAdapter = new TripsAdapter(getActivity(), mTrips);
+        mMainRecycler.setAdapter(mAdapter);
+
+        mMainRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                mScrollOffset += dy;
+                updateRefreshLayout();
+            }
+        });
+    }
+
+    @Override
+    public void setMenuVisibility(final boolean visible) {
+        super.setMenuVisibility(visible);
+        if (visible) {
+            updateRefreshLayout();
+        }
+    }
+
+    private void updateRefreshLayout() {
+        Boolean enabled = mScrollOffset <= 0;
+        if (mRefreshLayout != null && mRefreshLayout.isEnabled() != enabled) {
+            mRefreshLayout.setEnabled(enabled);
+        }
+    }
+
+    public void getTrips(final String query) {
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, Util.URL_GET_TRIPS,
                 new Response.Listener<String>() {
@@ -124,9 +162,9 @@ public class MainFragment extends Fragment {
                                     String arrivalTimestamp = tripsJSON.getJSONObject(i)
                                             .getString("arrival_timestamp");
                                     String image = tripsJSON.getJSONObject(i).getString("image");
-                                    mTrips.add(new TripsAdapter.Trip(departureCode, departureName,
-                                            departureTimestamp, arrivalCode, arrivalName,
-                                            arrivalTimestamp, image, type));
+                                    mTrips.add(new TripsAdapter.Trip(id, departureCode,
+                                            departureName, departureTimestamp, arrivalCode,
+                                            arrivalName, arrivalTimestamp, image, type));
                                 }
                                 mTrips.endBatchedUpdates();
                             } else {
@@ -157,6 +195,15 @@ public class MainFragment extends Fragment {
                 }
 
                 return volleyError;
+            }
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                if (!TextUtils.isEmpty(query)) {
+                    params.put("query", query);
+                }
+                return params;
             }
         };
         // Add the request to the RequestQueue.

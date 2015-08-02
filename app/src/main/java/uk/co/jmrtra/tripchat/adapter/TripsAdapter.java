@@ -2,11 +2,13 @@ package uk.co.jmrtra.tripchat.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,6 +19,7 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
 import java.text.SimpleDateFormat;
 
+import uk.co.jmrtra.tripchat.MessagesActivity;
 import uk.co.jmrtra.tripchat.R;
 
 public class TripsAdapter extends
@@ -24,11 +27,13 @@ public class TripsAdapter extends
 
     public static final int TRIP_TYPE_BUS = 0;
     public static final int TRIP_TYPE_TRAIN = 1;
+    private Context mContext;
     private ImageLoader mImageLoader;
     private SortedList<Trip> trips;
 
     public TripsAdapter(Context context, SortedList<Trip> trips) {
         this.trips = trips;
+        mContext = context;
 
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true)
                 .cacheOnDisk(true).showImageOnLoading(R.color.placeholder_bg)
@@ -42,6 +47,7 @@ public class TripsAdapter extends
 
     public static class Trip {
 
+        public String id;
         public String departureCode;
         public String departureName;
         public String departureTimestamp;
@@ -51,9 +57,10 @@ public class TripsAdapter extends
         public String image;
         public Integer tripType;
 
-        public Trip(String departureCode, String departureName, String departureTimestamp,
-                    String arrivalCode, String arrivalName, String arrivalTimestamp, String image,
-                    Integer tripType) {
+        public Trip(String id, String departureCode, String departureName,
+                    String departureTimestamp, String arrivalCode, String arrivalName,
+                    String arrivalTimestamp, String image, Integer tripType) {
+            this.id = id;
             this.departureCode = departureCode;
             this.departureName = departureName;
             this.departureTimestamp = departureTimestamp;
@@ -62,6 +69,10 @@ public class TripsAdapter extends
             this.arrivalTimestamp = arrivalTimestamp;
             this.image = image;
             this.tripType = tripType;
+        }
+
+        public String getId() {
+            return id;
         }
 
         public String getDepartureCode() {
@@ -122,6 +133,7 @@ public class TripsAdapter extends
         public TextView arrivalDateTxt;
         public ImageView img;
         public ImageView typeImg;
+        public ImageButton mChatBtn;
 
         public TripHolder(View v) {
             super(v);
@@ -136,8 +148,9 @@ public class TripsAdapter extends
             arrivalNameTxt = (TextView) v.findViewById(R.id.trips_arrival_name_txt);
             arrivalTimeTxt = (TextView) v.findViewById(R.id.trips_arrival_time_txt);
             arrivalDateTxt = (TextView) v.findViewById(R.id.trips_arrival_date_txt);
+            mChatBtn = (ImageButton) v.findViewById(R.id.trips_chat_btn);
 
-            v.setOnClickListener(this);
+            mChatBtn.setOnClickListener(this);
         }
 
         @Override
@@ -188,6 +201,11 @@ public class TripsAdapter extends
 
         @Override
         public void onItemClick(View v, int position) {
+            mContext.startActivity(new Intent(mContext, MessagesActivity.class)
+                    .putExtra(MessagesActivity.EXTRA_TRIP_ID, trips.get(position).getId())
+                    .putExtra(MessagesActivity.EXTRA_IMAGE, trips.get(position).getImage())
+                    .putExtra(MessagesActivity.EXTRA_NAME, trips.get(position).getDepartureName()
+                            + " - " + trips.get(position).getArrivalName()));
         }
 
     };

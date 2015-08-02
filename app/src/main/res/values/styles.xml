@@ -16,6 +16,7 @@
 
     <style name="AppTheme.Splash" parent="AppTheme">
         <item name="android:windowBackground">@color/primary</item>
+        <item name="colorPrimary">@android:color/white</item>
     </style>
 
     <style name="Button.Base" parent="Widget.AppCompat.Button">
@@ -27,11 +28,16 @@
     </style>
 
     <style name="ButtonGoogle" parent="Button.Base">
-        <item name="colorButtonNormal">@color/btn_google</item>
+        <item name="colorButtonNormal">@android:color/white</item>
+        <item name="android:textColor">@color/primary_text</item>
     </style>
 
     <style name="ButtonFacebook" parent="Button.Base">
         <item name="colorButtonNormal">@color/btn_facebook</item>
+    </style>
+
+    <style name="ButtonRed" parent="Button.Base">
+        <item name="colorButtonNormal">@color/primary</item>
     </style>
 
     <style name="MaterialDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">

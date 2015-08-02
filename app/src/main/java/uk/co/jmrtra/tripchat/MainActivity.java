@@ -8,13 +8,17 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import com.flurry.android.FlurryAgent;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout mTabLayout;
     private static final int ADD_TRIP_REQUEST = 0;
     private MainFragment mMainFragment;
+    private SwipeRefreshLayout mRefreshLayout;
+    private MenuItem mSearchMenuItem;
+    private boolean mIsSearchCollapsed = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +41,24 @@ public class MainActivity extends AppCompatActivity {
 
         mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.threads_refresh_layout);
+        mRefreshLayout.setColorSchemeResources(R.color.primary, R.color.accent);
 
         initTabs();
+
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            mMainFragment.getTrips(query);
+        }
     }
 
     private void initTabs() {
@@ -65,6 +88,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
+
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                Boolean enabled = state == ViewPager.SCROLL_STATE_IDLE
+                        && mViewPager.getCurrentItem() != 2;
+                if (mRefreshLayout.isEnabled() != enabled) {
+                    mRefreshLayout.setEnabled(enabled);
+                }
+            }
+        });
     }
 
     /**
@@ -102,18 +145,55 @@ public class MainActivity extends AppCompatActivity {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.main, menu);
 
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        mSearchMenuItem = menu.findItem(R.id.action_search);
+        SearchView searchView =
+                (SearchView) mSearchMenuItem.getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
 
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        MenuItemCompat.setOnActionExpandListener(mSearchMenuItem,
+                new MenuItemCompat.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
 
-        SearchView searchView = null;
-        if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
-        if (searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        }
+                        mMainFragment.getTrips(null);
+
+                        mIsSearchCollapsed = true;
+
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionExpand(
+                            final MenuItem item) {
+
+                        mIsSearchCollapsed = false;
+
+                        return true;
+                    }
+                });
         return super.onCreateOptionsMenu(menu);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if (!mIsSearchCollapsed) {
+            MenuItemCompat.collapseActionView(mSearchMenuItem);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Boolean isFirstPage = mViewPager.getCurrentItem() == 0;
+        menu.findItem(R.id.action_search).setVisible(isFirstPage);
+        menu.findItem(R.id.action_add).setVisible(isFirstPage);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -127,7 +207,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ADD_TRIP_REQUEST && resultCode == RESULT_OK) {
-            mMainFragment.getTrips();
+            mMainFragment.getTrips(null);
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FlurryAgent.onStartSession(this, getString(R.string.flurry_key));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        FlurryAgent.onEndSession(this);
     }
 }

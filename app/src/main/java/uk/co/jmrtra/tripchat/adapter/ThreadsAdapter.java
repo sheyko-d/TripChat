@@ -22,6 +22,7 @@ import uk.co.jmrtra.tripchat.Util;
 public class ThreadsAdapter extends
         RecyclerView.Adapter<ThreadsAdapter.ThreadHolder> {
 
+    private final DisplayImageOptions mDefaultOptions;
     private Context mContext;
     private ImageLoader mImageLoader;
     private SortedList<Thread> threads;
@@ -30,14 +31,15 @@ public class ThreadsAdapter extends
         mContext = context;
         this.threads = threads;
 
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true)
+        mDefaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true)
                 .cacheOnDisk(true).showImageOnLoading(R.color.placeholder_bg)
+                .showImageOnFail(R.drawable.avatar_placeholder)
                 .displayer(new FadeInBitmapDisplayer(250, true, false, false))
                 .build();
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
-                context).defaultDisplayImageOptions(defaultOptions).build();
-        ImageLoader.getInstance().init(config);
+                context).defaultDisplayImageOptions(mDefaultOptions).build();
         mImageLoader = ImageLoader.getInstance();
+        mImageLoader.init(config);
     }
 
     public static class Thread {
@@ -126,7 +128,7 @@ public class ThreadsAdapter extends
         holder.nameTxt.setText(thread.getName());
         holder.snippetTxt.setText(thread.getSnippet());
         holder.timeTxt.setText(thread.getLastTime());
-        mImageLoader.displayImage(thread.getAvatar(), holder.avatarImg);
+        mImageLoader.displayImage(thread.getAvatar(), holder.avatarImg, mDefaultOptions);
     }
 
     @Override
@@ -139,6 +141,7 @@ public class ThreadsAdapter extends
         @Override
         public void onItemClick(View v, int position) {
             mContext.startActivity(new Intent(mContext, MessagesActivity.class)
+                    .putExtra(MessagesActivity.EXTRA_THREAD_ID, threads.get(position).getThreadId())
                     .putExtra(MessagesActivity.EXTRA_IMAGE, threads.get(position).getAvatar())
                     .putExtra(MessagesActivity.EXTRA_NAME, threads.get(position).getName()));
         }

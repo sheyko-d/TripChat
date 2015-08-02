@@ -5,6 +5,20 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Google+ permissions -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+
+    <!-- GCM permissions -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
+    <permission
+        android:name="uk.co.jmrtra.tripchat.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="uk.co.jmrtra.tripchat.permission.C2D_MESSAGE" />
 
     <application
         android:name=".BaseApplication"
@@ -13,7 +27,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".SplashActivity"
+            android:name=".LauncherActivity"
             android:theme="@style/AppTheme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,19 +35,77 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" />
         <activity
-            android:name=".MessagesActivity"
-            android:theme="@style/AppTheme.Transluent" />
+            android:name=".SplashActivity"
+            android:theme="@style/AppTheme.Splash" />
         <activity
-            android:name=".AddTripActivity"
-            android:label="@string/title_activity_add_trip"
-            android:windowSoftInputMode="stateHidden">
-
+            android:name=".MainActivity"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+        <activity
+            android:name=".MessagesActivity"
+            android:theme="@style/AppTheme.Transluent"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".AddTripActivity"
+            android:label="@string/title_activity_add_trip"
+            android:windowSoftInputMode="stateHidden"/>
+        <activity
+            android:name=".RegisterActivity"
+            android:label="@string/title_activity_register"
+            android:windowSoftInputMode="stateHidden" />
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_login"
+            android:windowSoftInputMode="stateHidden" />
+
+        <!-- Facebook data -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Google+ data -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <!-- GCM data -->
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="uk.co.jmrtra.tripchat" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".RegistrationIntentService"
+            android:exported="false" />
+        <service
+            android:name=".MyGcmListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".MyInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

@@ -30,6 +30,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.flurry.android.FlurryAgent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -94,6 +95,18 @@ public class AddTripActivity extends AppCompatActivity {
         initTextFields();
 
         initSpinner();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FlurryAgent.onStartSession(this, getString(R.string.flurry_key));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        FlurryAgent.onEndSession(this);
     }
 
     View.OnClickListener mDateClickListener = new View.OnClickListener() {
@@ -473,9 +486,7 @@ public class AddTripActivity extends AppCompatActivity {
                 protected VolleyError parseNetworkError(VolleyError volleyError) {
                     if (volleyError.networkResponse != null
                             && volleyError.networkResponse.data != null) {
-                        VolleyError error
-                                = new VolleyError(new String(volleyError.networkResponse.data));
-                        volleyError = error;
+                        volleyError = new VolleyError(new String(volleyError.networkResponse.data));
                     }
 
                     return volleyError;
