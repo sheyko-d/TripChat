@@ -131,7 +131,7 @@ public class MyGcmListenerService extends GcmListenerService {
         final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_notif)
                 .setContentTitle(name)
-                .setContentText(message)
+                .setContentText(message.replaceAll("<(.*?)\\>"," "))
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
         if (prefs.getBoolean("sound", true)) {

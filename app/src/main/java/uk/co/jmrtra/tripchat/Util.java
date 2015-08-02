@@ -1,6 +1,7 @@
 package uk.co.jmrtra.tripchat;
 
 import android.content.pm.ApplicationInfo;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class Util {
@@ -72,20 +73,24 @@ public class Util {
     }
 
     public static String formatTime(String timestamp) {
-        int differenceMin = (int) (System.currentTimeMillis() - Long.parseLong(timestamp))
-                / 1000 / 60;
-        if (differenceMin == 0) {
-            return "Just now";
-        } else if (differenceMin < 60) {
-            return differenceMin + " min ago";
-        } else if (differenceMin < 60 * 24) {
-            return differenceMin / 60 + " hour(s) ago";
-        } else if (differenceMin < 60 * 24 * 30) {
-            return differenceMin / 60 / 24 + " day(s) ago";
-        } else if (differenceMin < 60 * 60 * 30 * 12) {
-            return differenceMin / 60 / 24 * 30 + " month(s) ago";
+        if (TextUtils.isEmpty(timestamp)) {
+            return "";
         } else {
-            return differenceMin / 60 / 24 / 30 / 12 + " year(s) ago";
+            int differenceMin = (int) (System.currentTimeMillis() - Long.parseLong(timestamp))
+                    / 1000 / 60;
+            if (differenceMin == 0) {
+                return "Just now";
+            } else if (differenceMin < 60) {
+                return differenceMin + " min ago";
+            } else if (differenceMin < 60 * 24) {
+                return differenceMin / 60 + " hour(s) ago";
+            } else if (differenceMin < 60 * 24 * 30) {
+                return differenceMin / 60 / 24 + " day(s) ago";
+            } else if (differenceMin < 60 * 60 * 30 * 12) {
+                return differenceMin / 60 / 24 * 30 + " month(s) ago";
+            } else {
+                return differenceMin / 60 / 24 / 30 / 12 + " year(s) ago";
+            }
         }
     }
 }

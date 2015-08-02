@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -126,8 +128,13 @@ public class ThreadsAdapter extends
         Thread thread = threads.get(position);
 
         holder.nameTxt.setText(thread.getName());
-        holder.snippetTxt.setText(thread.getSnippet());
-        holder.timeTxt.setText(thread.getLastTime());
+        holder.snippetTxt.setText(Html.fromHtml(thread.getSnippet()));
+        if (!TextUtils.isEmpty(thread.getLastTime())) {
+            holder.timeTxt.setText(thread.getLastTime());
+            holder.timeTxt.setVisibility(View.VISIBLE);
+        } else {
+            holder.timeTxt.setVisibility(View.GONE);
+        }
         mImageLoader.displayImage(thread.getAvatar(), holder.avatarImg, mDefaultOptions);
     }
 
