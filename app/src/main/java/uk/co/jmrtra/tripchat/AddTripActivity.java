@@ -272,101 +272,106 @@ public class AddTripActivity extends AppCompatActivity {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         }
 
-        final double lat = location.getLatitude();
-        final double lng = location.getLongitude();
+        if (location != null) {
+            final double lat = location.getLatitude();
+            final double lng = location.getLongitude();
 
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
+            // Instantiate the RequestQueue.
+            RequestQueue queue = Volley.newRequestQueue(this);
 
-        mStationDepartureProgressBar.setVisibility(View.VISIBLE);
-        mStationArrivalProgressBar.setVisibility(View.VISIBLE);
-        mDepartureStationAutoTxt.setEnabled(false);
-        mArrivalStationAutoTxt.setEnabled(false);
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.POST,
-                Util.URL_GET_SUGGESTIONS, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject responseJSON = new JSONObject(response);
-                    if (responseJSON.getString("result").equals("success")) {
-                        JSONArray stationsJSON = new JSONArray(responseJSON.getString("stations"));
+            mStationDepartureProgressBar.setVisibility(View.VISIBLE);
+            mStationArrivalProgressBar.setVisibility(View.VISIBLE);
+            mDepartureStationAutoTxt.setEnabled(false);
+            mArrivalStationAutoTxt.setEnabled(false);
+            // Request a string response from the provided URL.
+            StringRequest stringRequest = new StringRequest(Request.Method.POST,
+                    Util.URL_GET_SUGGESTIONS, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject responseJSON = new JSONObject(response);
+                        if (responseJSON.getString("result").equals("success")) {
+                            JSONArray stationsJSON = new JSONArray(responseJSON.getString("stations"));
 
-                        ArrayList<Util.Station> stations = new ArrayList<>();
-                        int stationsCount = stationsJSON.length();
-                        for (int i = 0; i < stationsCount; i++) {
-                            JSONObject stationJSON = stationsJSON.getJSONObject(i);
-                            String name = stationJSON.getString("name");
-                            String code = stationJSON.getString("code");
-                            String lat = stationJSON.getString("lat");
-                            String lng = stationJSON.getString("lng");
-                            String img = stationJSON.getString("img");
-                            String distance = stationJSON.getString("distance");
+                            ArrayList<Util.Station> stations = new ArrayList<>();
+                            int stationsCount = stationsJSON.length();
+                            for (int i = 0; i < stationsCount; i++) {
+                                JSONObject stationJSON = stationsJSON.getJSONObject(i);
+                                String name = stationJSON.getString("name");
+                                String code = stationJSON.getString("code");
+                                String lat = stationJSON.getString("lat");
+                                String lng = stationJSON.getString("lng");
+                                String img = stationJSON.getString("img");
+                                String distance = stationJSON.getString("distance");
 
-                            stations.add(new Util.Station(name, code, lat, lng, img, distance));
+                                stations.add(new Util.Station(name, code, lat, lng, img, distance));
+                            }
+
+                            mDepartureAdapter = new StationsAdapter(AddTripActivity.this,
+                                    R.layout.item_stations, R.id.add_trip_station_name_txt, stations);
+                            mArrivalAdapter = new StationsAdapter(AddTripActivity.this,
+                                    R.layout.item_stations, R.id.add_trip_station_name_txt, stations);
+                            mDepartureStationAutoTxt.setAdapter(mDepartureAdapter);
+                            mArrivalStationAutoTxt.setAdapter(mArrivalAdapter);
+
+                            mLoadedSuggestions = true;
+                        } else {
+                            Toast.makeText(AddTripActivity.this, "Unknown server error",
+                                    Toast.LENGTH_LONG).show();
                         }
-
-                        mDepartureAdapter = new StationsAdapter(AddTripActivity.this,
-                                R.layout.item_stations, R.id.add_trip_station_name_txt, stations);
-                        mArrivalAdapter = new StationsAdapter(AddTripActivity.this,
-                                R.layout.item_stations, R.id.add_trip_station_name_txt, stations);
-                        mDepartureStationAutoTxt.setAdapter(mDepartureAdapter);
-                        mArrivalStationAutoTxt.setAdapter(mArrivalAdapter);
-
-                        mLoadedSuggestions = true;
-                    } else {
-                        Toast.makeText(AddTripActivity.this, "Unknown server error",
-                                Toast.LENGTH_LONG).show();
+                    } catch (JSONException e) {
+                        if (Util.isDebugging()) {
+                            Toast.makeText(AddTripActivity.this, "JSON error: " + response,
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(AddTripActivity.this, "Unknown server error",
+                                    Toast.LENGTH_LONG).show();
+                        }
                     }
-                } catch (JSONException e) {
-                    if (Util.isDebugging()) {
-                        Toast.makeText(AddTripActivity.this, "JSON error: " + response,
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(AddTripActivity.this, "Unknown server error",
-                                Toast.LENGTH_LONG).show();
-                    }
+                    Util.Log(response);
+
+                    mStationDepartureProgressBar.setVisibility(View.GONE);
+                    mStationArrivalProgressBar.setVisibility(View.GONE);
+                    mDepartureStationAutoTxt.setEnabled(true);
+                    mArrivalStationAutoTxt.setEnabled(true);
                 }
-                Util.Log(response);
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(AddTripActivity.this, "Server error",
+                            Toast.LENGTH_LONG).show();
+                    Util.Log("Server error: " + error);
 
-                mStationDepartureProgressBar.setVisibility(View.GONE);
-                mStationArrivalProgressBar.setVisibility(View.GONE);
-                mDepartureStationAutoTxt.setEnabled(true);
-                mArrivalStationAutoTxt.setEnabled(true);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(AddTripActivity.this, "Server error",
-                        Toast.LENGTH_LONG).show();
-                Util.Log("Server error: " + error);
+                    mStationDepartureProgressBar.setVisibility(View.GONE);
+                    mStationArrivalProgressBar.setVisibility(View.GONE);
+                    mDepartureStationAutoTxt.setEnabled(true);
+                    mArrivalStationAutoTxt.setEnabled(true);
+                }
+            }) {
+                @Override
+                protected VolleyError parseNetworkError(VolleyError volleyError) {
+                    if (volleyError.networkResponse != null
+                            && volleyError.networkResponse.data != null) {
+                        volleyError = new VolleyError(new String(volleyError.networkResponse.data));
+                    }
 
-                mStationDepartureProgressBar.setVisibility(View.GONE);
-                mStationArrivalProgressBar.setVisibility(View.GONE);
-                mDepartureStationAutoTxt.setEnabled(true);
-                mArrivalStationAutoTxt.setEnabled(true);
-            }
-        }) {
-            @Override
-            protected VolleyError parseNetworkError(VolleyError volleyError) {
-                if (volleyError.networkResponse != null
-                        && volleyError.networkResponse.data != null) {
-                    volleyError = new VolleyError(new String(volleyError.networkResponse.data));
+                    return volleyError;
                 }
 
-                return volleyError;
-            }
-
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("lat", lat + "");
-                params.put("lng", lng + "");
-                return params;
-            }
-        };
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("lat", lat + "");
+                    params.put("lng", lng + "");
+                    return params;
+                }
+            };
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
+        } else {
+            Toast.makeText(AddTripActivity.this, "Can't get your location, please enable GPS",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initToolbar() {
