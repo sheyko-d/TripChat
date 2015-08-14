@@ -33,6 +33,9 @@
     <string name="main_trips_departure_title">DEPARTURE</string>
     <string name="main_trips_arrival_title">ARRIVAL</string>
     <string name="main_trips_placeholder">NO TRIPS FOUND</string>
+    <string name="main_context_favorite_on">Add to favorites</string>
+    <string name="main_context_favorite_off">Remove from favorites</string>
+    <string name="main_context_remove">Remove trip</string>
 
     <!-- Settings screen -->
     <string name="settings_notification_header">Notifications</string>

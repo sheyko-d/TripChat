@@ -1,8 +1,10 @@
 package uk.co.jmrtra.tripchat.adapter;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,43 +13,65 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
-import java.text.SimpleDateFormat;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import uk.co.jmrtra.tripchat.MainActivity;
 import uk.co.jmrtra.tripchat.MessagesActivity;
 import uk.co.jmrtra.tripchat.R;
+import uk.co.jmrtra.tripchat.Util;
 
 public class TripsAdapter extends
         RecyclerView.Adapter<TripsAdapter.TripHolder> {
 
     public static final int TRIP_TYPE_BUS = 0;
     public static final int TRIP_TYPE_TRAIN = 1;
-    private Context mContext;
+    private final SharedPreferences mPrefs;
+    private String mMyId;
+    private MainActivity mActivity;
     private ImageLoader mImageLoader;
     private SortedList<Trip> trips;
 
-    public TripsAdapter(Context context, SortedList<Trip> trips) {
+    public TripsAdapter(MainActivity activity, SortedList<Trip> trips) {
         this.trips = trips;
-        mContext = context;
+        mActivity = activity;
 
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true)
                 .cacheOnDisk(true).showImageOnLoading(R.color.placeholder_bg)
                 .displayer(new FadeInBitmapDisplayer(250, true, false, false))
                 .build();
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
-                context).defaultDisplayImageOptions(defaultOptions).build();
+                activity).defaultDisplayImageOptions(defaultOptions).build();
         ImageLoader.getInstance().init(config);
         mImageLoader = ImageLoader.getInstance();
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        mMyId = mPrefs.getString("id", "");
     }
 
     public static class Trip {
 
         public String id;
+        public String userId;
         public String departureCode;
         public String departureName;
         public String departureTimestamp;
@@ -56,11 +80,13 @@ public class TripsAdapter extends
         public String arrivalTimestamp;
         public String image;
         public Integer tripType;
+        public Boolean isFavorite;
 
-        public Trip(String id, String departureCode, String departureName,
+        public Trip(String id, String userId, String departureCode, String departureName,
                     String departureTimestamp, String arrivalCode, String arrivalName,
-                    String arrivalTimestamp, String image, Integer tripType) {
+                    String arrivalTimestamp, String image, Integer tripType, Boolean isFavorite) {
             this.id = id;
+            this.userId = userId;
             this.departureCode = departureCode;
             this.departureName = departureName;
             this.departureTimestamp = departureTimestamp;
@@ -69,10 +95,15 @@ public class TripsAdapter extends
             this.arrivalTimestamp = arrivalTimestamp;
             this.image = image;
             this.tripType = tripType;
+            this.isFavorite = isFavorite;
         }
 
         public String getId() {
             return id;
+        }
+
+        public String getUserId() {
+            return userId;
         }
 
         public String getDepartureCode() {
@@ -99,9 +130,17 @@ public class TripsAdapter extends
             return tripType;
         }
 
+        public Boolean isFavorite() {
+            return isFavorite;
+        }
+
         @SuppressLint("SimpleDateFormat")
         public String getDepartureTime() {
             return new SimpleDateFormat("HH:mm").format(Long.parseLong(departureTimestamp));
+        }
+
+        public String getDepartureTimestamp() {
+            return departureTimestamp;
         }
 
         @SuppressLint("SimpleDateFormat")
@@ -133,7 +172,9 @@ public class TripsAdapter extends
         public TextView arrivalDateTxt;
         public ImageView img;
         public ImageView typeImg;
-        public ImageButton mChatBtn;
+        public ImageButton chatBtn;
+        public ImageView removeImg;
+        public ImageView favoriteImg;
 
         public TripHolder(View v) {
             super(v);
@@ -148,14 +189,24 @@ public class TripsAdapter extends
             arrivalNameTxt = (TextView) v.findViewById(R.id.trips_arrival_name_txt);
             arrivalTimeTxt = (TextView) v.findViewById(R.id.trips_arrival_time_txt);
             arrivalDateTxt = (TextView) v.findViewById(R.id.trips_arrival_date_txt);
-            mChatBtn = (ImageButton) v.findViewById(R.id.trips_chat_btn);
+            chatBtn = (ImageButton) v.findViewById(R.id.trips_chat_btn);
+            removeImg = (ImageView) v.findViewById(R.id.trips_remove_img);
+            favoriteImg = (ImageView) v.findViewById(R.id.trips_favorite_img);
 
-            mChatBtn.setOnClickListener(this);
+            chatBtn.setOnClickListener(this);
+            removeImg.setOnClickListener(this);
+            favoriteImg.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            tripClickListener.onItemClick(v, getAdapterPosition());
+            if (v.getId() == R.id.trips_chat_btn) {
+                tripClickListener.onItemClick(v, getAdapterPosition());
+            } else if (v.getId() == R.id.trips_remove_img) {
+                removeClickListener.onItemClick(v, getAdapterPosition());
+            } else {
+                favoriteClickListener.onItemClick(v, getAdapterPosition());
+            }
         }
     }
 
@@ -190,6 +241,10 @@ public class TripsAdapter extends
         } else {
             holder.typeImg.setImageResource(R.drawable.ic_type_train);
         }
+
+        holder.favoriteImg.setImageResource(trip.isFavorite() ? R.drawable.ic_favorite_on
+                : R.drawable.ic_favorite_off);
+        holder.removeImg.setVisibility(mMyId.equals(trip.getUserId()) ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -201,7 +256,7 @@ public class TripsAdapter extends
 
         @Override
         public void onItemClick(View v, int position) {
-            mContext.startActivity(new Intent(mContext, MessagesActivity.class)
+            mActivity.startActivity(new Intent(mActivity, MessagesActivity.class)
                     .putExtra(MessagesActivity.EXTRA_TRIP_ID, trips.get(position).getId())
                     .putExtra(MessagesActivity.EXTRA_IMAGE, trips.get(position).getImage())
                     .putExtra(MessagesActivity.EXTRA_NAME, trips.get(position).getDepartureName()
@@ -209,4 +264,101 @@ public class TripsAdapter extends
         }
 
     };
+
+    OnItemClickListener removeClickListener = new OnItemClickListener() {
+
+        @Override
+        public void onItemClick(View v, int position) {
+            deleteTrip(position);
+        }
+
+    };
+
+    public void deleteTrip(final int position) {
+        final String id = trips.get(position).getId();
+
+        final ProgressDialog dialog = new ProgressDialog(mActivity);
+        dialog.setMessage("Loading...");
+        dialog.show();
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, Util.URL_DELETE_TRIP,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        dialog.cancel();
+
+                        try {
+                            JSONObject responseJSON = new JSONObject(response);
+                            if (responseJSON.getString("result").equals("success")) {
+                                trips.removeItemAt(position);
+                            } else {
+                                Util.Log("Unknown server error");
+                                Toast.makeText(mActivity, "Unknown server error",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            Util.Log("JSON error: " + e);
+                            Toast.makeText(mActivity, "JSON error: " + e,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        Util.Log(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Util.Log("Server error: " + error);
+                Toast.makeText(mActivity, "Server error: " + error, Toast.LENGTH_LONG)
+                        .show();
+                dialog.cancel();
+            }
+        }) {
+            @Override
+            protected VolleyError parseNetworkError(VolleyError volleyError) {
+                if (volleyError.networkResponse != null
+                        && volleyError.networkResponse.data != null) {
+                    volleyError = new VolleyError(new String(volleyError.networkResponse.data));
+                }
+
+                return volleyError;
+            }
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("id", id);
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(1000 * 30,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        // Add the request to the RequestQueue.
+        Volley.newRequestQueue(mActivity).add(stringRequest);
+    }
+
+    OnItemClickListener favoriteClickListener = new OnItemClickListener() {
+
+        @Override
+        public void onItemClick(View v, int position) {
+            Set<String> favoriteSet = mPrefs.getStringSet("favorite_trips", new HashSet<String>());
+
+            String id = trips.get(position).getId();
+            if (favoriteSet.contains(id)) {
+                favoriteSet.remove(id);
+            } else {
+                favoriteSet.add(id);
+            }
+
+            mPrefs.edit().putStringSet("favorite_trips", favoriteSet).apply();
+
+            Trip checkedTrip = trips.get(position);
+            checkedTrip.isFavorite = !checkedTrip.isFavorite;
+            trips.updateItemAt(position, checkedTrip);
+        }
+
+    };
+
 }

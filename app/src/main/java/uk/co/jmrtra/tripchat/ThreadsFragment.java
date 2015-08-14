@@ -3,7 +3,6 @@ package uk.co.jmrtra.tripchat;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -70,10 +69,8 @@ public class ThreadsFragment extends Fragment {
     });
     private ThreadsAdapter mAdapter;
     private View mProgressBar;
-    private SwipeRefreshLayout mRefreshLayout;
     private boolean mForceUpdate;
     private RecyclerView mThreadsRecycler;
-    private int mScrollOffset = 0;
 
     public static ThreadsFragment newInstance() {
         return new ThreadsFragment();
@@ -90,16 +87,6 @@ public class ThreadsFragment extends Fragment {
         mThreadsRecycler = (RecyclerView) rootView.findViewById(R.id
                 .threads_recycler_view);
         mProgressBar = rootView.findViewById(R.id.threads_progress_bar);
-        mRefreshLayout = (SwipeRefreshLayout) getActivity()
-                .findViewById(R.id.threads_refresh_layout);
-
-        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mForceUpdate = true;
-                getThreads();
-            }
-        });
 
         initRecycler();
 
@@ -111,14 +98,6 @@ public class ThreadsFragment extends Fragment {
         return rootView;
     }
 
-    @Override
-    public void setMenuVisibility(final boolean visible) {
-        super.setMenuVisibility(visible);
-        if (visible) {
-            updateRefreshLayout();
-        }
-    }
-
     private void initRecycler() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         mThreadsRecycler.setLayoutManager(layoutManager);
@@ -127,22 +106,6 @@ public class ThreadsFragment extends Fragment {
 
         mAdapter = new ThreadsAdapter(getActivity(), mThreads);
         mThreadsRecycler.setAdapter(mAdapter);
-
-        mThreadsRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                mScrollOffset += dy;
-                updateRefreshLayout();
-
-            }
-        });
-    }
-
-    private void updateRefreshLayout() {
-        Boolean enabled = mScrollOffset <= 0;
-        if (mRefreshLayout != null && mRefreshLayout.isEnabled() != enabled) {
-            mRefreshLayout.setEnabled(enabled);
-        }
     }
 
     public void getThreads() {
@@ -193,7 +156,6 @@ public class ThreadsFragment extends Fragment {
                         }
                         Util.Log(response);
                         mProgressBar.setVisibility(View.GONE);
-                        mRefreshLayout.setRefreshing(false);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -201,7 +163,6 @@ public class ThreadsFragment extends Fragment {
                 Util.Log("Server error: " + error);
                 Toast.makeText(getActivity(), "Server error: " + error, Toast.LENGTH_LONG).show();
                 mProgressBar.setVisibility(View.GONE);
-                mRefreshLayout.setRefreshing(false);
             }
         }) {
             @Override

@@ -10,7 +10,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -28,21 +27,21 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout mTabLayout;
     private static final int ADD_TRIP_REQUEST = 0;
     private MainFragment mMainFragment;
-    private SwipeRefreshLayout mRefreshLayout;
     private MenuItem mSearchMenuItem;
     private boolean mIsSearchCollapsed = true;
+    public static MainActivity sActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sActivity = this;
+
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
-        mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.threads_refresh_layout);
-        mRefreshLayout.setColorSchemeResources(R.color.primary, R.color.accent);
 
         initTabs();
 
@@ -89,25 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
 
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                invalidateOptionsMenu();
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                Boolean enabled = state == ViewPager.SCROLL_STATE_IDLE
-                        && mViewPager.getCurrentItem() != 2;
-                if (mRefreshLayout.isEnabled() != enabled) {
-                    mRefreshLayout.setEnabled(enabled);
-                }
-            }
-        });
     }
 
     /**
@@ -177,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
                 });
         return super.onCreateOptionsMenu(menu);
     }
-
 
     @Override
     public void onBackPressed() {

@@ -18,6 +18,7 @@ public class Util {
     public static final String URL_GET_THREADS = "http://jmrtra.co.uk/tripchat/get_threads.php";
     public static final String URL_GET_MESSAGES = "http://jmrtra.co.uk/tripchat/get_messages.php";
     public static final String URL_SEND_MESSAGE = "http://jmrtra.co.uk/tripchat/send_message.php";
+    public static final String URL_DELETE_TRIP = "http://jmrtra.co.uk/tripchat/delete_trip.php";
 
     // Methods
     public static void Log(Object text) {

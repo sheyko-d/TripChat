@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -207,7 +209,7 @@ public class AddTripActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (mDepartureAdapter != null && mDepartureAdapter.selectedStation != null) {
                     mDepartureAdapter.stationIsIncorrect = !mDepartureAdapter.selectedStation
-                            .getName().equals(s);
+                            .getName().equals(mDepartureStationAutoTxt.getText().toString());
                 }
             }
 
@@ -225,7 +227,7 @@ public class AddTripActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (mArrivalAdapter != null && mArrivalAdapter.selectedStation != null) {
                     mArrivalAdapter.stationIsIncorrect = !mArrivalAdapter.selectedStation
-                            .getName().equals(s);
+                            .getName().equals(mArrivalStationAutoTxt.getText().toString());
                 }
             }
 
@@ -338,9 +340,9 @@ public class AddTripActivity extends AppCompatActivity {
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(AddTripActivity.this, "Server error",
+                    Toast.makeText(AddTripActivity.this, "Suggestions server error: " + error,
                             Toast.LENGTH_LONG).show();
-                    Util.Log("Server error: " + error);
+                    Util.Log("Suggestion server error: " + error);
 
                     mStationDepartureProgressBar.setVisibility(View.GONE);
                     mStationArrivalProgressBar.setVisibility(View.GONE);
@@ -366,8 +368,14 @@ public class AddTripActivity extends AppCompatActivity {
                     return params;
                 }
             };
+
+            stringRequest.setRetryPolicy(new DefaultRetryPolicy(1000 * 30,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
             // Add the request to the RequestQueue.
             queue.add(stringRequest);
+
         } else {
             Toast.makeText(AddTripActivity.this, "Can't get your location, please enable GPS",
                     Toast.LENGTH_SHORT).show();
@@ -413,6 +421,8 @@ public class AddTripActivity extends AppCompatActivity {
     private String mImage = null;
 
     private void addTrip() {
+        final String id = PreferenceManager.getDefaultSharedPreferences(this).getString("id", "");
+
         Boolean containsErrors = false;
 
         final String type = mSpinner.getSelectedItemPosition() + "";
@@ -500,6 +510,7 @@ public class AddTripActivity extends AppCompatActivity {
                 @Override
                 protected Map<String, String> getParams() {
                     Map<String, String> params = new HashMap<>();
+                    params.put("user_id", id);
                     params.put("type", type);
                     params.put("departure_name", mDepartureName);
                     params.put("departure_code", mDepartureCode);
