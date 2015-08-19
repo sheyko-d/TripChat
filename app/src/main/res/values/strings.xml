@@ -1,13 +1,13 @@
 <resources>
 
-    <string name="app_name">Trip Chat</string>
+    <string name="app_name">Traversation</string>
     <string name="facebook_app_id">880589012031339</string>
     <string name="flurry_key">ZWCXH9C64NXCDWJKSRRV</string>
 
     <!-- Splash screen -->
     <string name="splash_btn_facebook">Facebook</string>
     <string name="splash_btn_google">Google</string>
-    <string name="splash_btn_email">Log In with TripChat Account</string>
+    <string name="splash_btn_email">Log In with Traversation Account</string>
 
     <!-- Register screen -->
     <string name="title_activity_register">Create an Account</string>
